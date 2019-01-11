@@ -1,13 +1,17 @@
 class Board
-  attr_reader :positions, :pieces
+  attr_accessor :positions, :pieces, :parent
 
-  def initialize(size)
+  def initialize(size, positions = [], current_piece = nil)
+    @parent = nil
     @game_over = false
     @winner = false
     @size = size
     @pieces = ['X','O']
-    @current_piece = nil
-    @positions = []
+    @current_piece = current_piece
+    @positions = positions
+  end
+
+  def first_board
     @size.times do
       array = []
       @size.times do
@@ -50,19 +54,31 @@ class Board
 
   def take_turn
     coords = get_coordinates
-    @positions[coords[0]][coords[1]] = @current_piece
-    display
+    #makes new board that is empty
+    child = Board.new(@size, array, @current_piece)
+    #sets that boards parents to this one
+    child.parent = self
+    #sets that boards positions to the move
+    child.positions[coords[0]][coords[1]] = @current_piece
+    puts "this instance's positions #{@positions}"
+    puts "child's positions #{child.positions}"
+    #displays that board
+    child.display
     #check for wins and shit here
-    winner if horizontal_win?
-    winner if vertical_win?
-    winner if diagonal_lr_win?
-    winner if diagonal_rl_win?
-    stalemate if full? && @winner == false
+    winner if child.horizontal_win?
+    winner if child.vertical_win?
+    winner if child.diagonal_lr_win?
+    winner if child.diagonal_rl_win?
+    stalemate if child.full? && child.winner == false
 
     unless @game_over == true
-      change_piece
-      take_turn
+      child.change_piece
+      child.take_turn
     end
+  end
+
+  def display_entire_game
+
   end
 
   def winner
@@ -96,7 +112,6 @@ class Board
       @positions.each do |row|
         string << row[index]
       end
-      puts string
       return true if string.include?(@current_piece*3)
       index += 1
     end
@@ -139,7 +154,6 @@ class Board
 
   def full?
     all_positions = @positions.flatten
-    puts all_positions.inspect
     all_positions.include?(" ") ? false : true
   end
 
@@ -150,10 +164,12 @@ class Board
     end
     @positions.flatten == array ? true : false
   end
+
+#end of class
 end
 
-
 b = Board.new(3)
+b.first_board
 b.display
 b.get_starting_piece
 b.take_turn
