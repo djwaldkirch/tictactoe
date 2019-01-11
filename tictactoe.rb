@@ -2,6 +2,8 @@ class Board
   attr_reader :positions, :pieces
 
   def initialize(size)
+    @game_over = false
+    @winner = false
     @size = size
     @pieces = ['X','O']
     @current_piece = nil
@@ -51,17 +53,27 @@ class Board
     @positions[coords[0]][coords[1]] = @current_piece
     display
     #check for wins and shit here
-    if horizontal_win?
-      puts "congrats"
+    winner if horizontal_win?
+    winner if vertical_win?
+    winner if diagonal_lr_win?
+    winner if diagonal_rl_win?
+    stalemate if full? && @winner == false
+
+    unless @game_over == true
+      change_piece
+      take_turn
     end
+  end
 
-    if vertical_win?
-      puts "congrats"
-    end
+  def winner
+    puts "#{@current_piece} wins! Game over."
+    @game_over = true
+    @winner = true
+  end
 
-
-    change_piece
-    take_turn
+  def stalemate
+    puts "It's a tie! Game over."
+    @game_over = true
   end
 
   #this is a clever but probably stupid way to do this.
@@ -70,28 +82,74 @@ class Board
   def horizontal_win?
     @positions.each do |row|
       string = row.join
-      if string.include?(@current_piece*3)
-        return true
-      end
+      return true if string.include?(@current_piece*3)
     end
     return false
   end
 
+  #here i create a blank string and add the 0th element of each row, then the 1st etc.
+  #i check if that string contains XXX or OOO
   def vertical_win?
     index = 0
-    @positions.each do |row|
-      new_array = []
-      new_array << row[index]
-      string = new_array.join
-      if string.include?(@current_piece*3)
-        return true
-      else
-        index += 1
+    @size.times do
+      string = ""
+      @positions.each do |row|
+        string << row[index]
       end
+      puts string
+      return true if string.include?(@current_piece*3)
+      index += 1
     end
     return false
   end
 
+  def diagonal_lr_win?
+    y_index = 0
+    (@size-2).times do
+      x_index = 0
+      (@size-2).times do
+        string = ""
+        string << @positions[y_index][x_index]
+        string << @positions[y_index + 1][x_index + 1]
+        string << @positions[y_index + 2][x_index + 2]
+        return true if string.include?(@current_piece*3)
+        x_index += 1
+      end
+      y_index += 1
+    end
+    return false
+  end
+
+  def diagonal_rl_win?
+    y_index = 0
+    (@size-2).times do
+      x_index = 2
+      (@size-2).times do
+        string = ""
+        string << @positions[y_index][x_index]
+        string << @positions[y_index + 1][x_index - 1]
+        string << @positions[y_index + 2][x_index - 2]
+        return true if string.include?(@current_piece*3)
+        x_index += 1
+      end
+      y_index += 1
+    end
+    return false
+  end
+
+  def full?
+    all_positions = @positions.flatten
+    puts all_positions.inspect
+    all_positions.include?(" ") ? false : true
+  end
+
+  def empty?
+    array = []
+    (@size ** 2).times do
+      array << " "
+    end
+    @positions.flatten == array ? true : false
+  end
 end
 
 
