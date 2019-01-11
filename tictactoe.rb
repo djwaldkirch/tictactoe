@@ -54,17 +54,12 @@ class Board
 
   def take_turn
     coords = get_coordinates
-    #makes new board that is empty
-    child = Board.new(@size, array, @current_piece)
-    #sets that boards parents to this one
+    child = Board.new(@size, @positions, @current_piece)
     child.parent = self
-    #sets that boards positions to the move
     child.positions[coords[0]][coords[1]] = @current_piece
     puts "this instance's positions #{@positions}"
     puts "child's positions #{child.positions}"
-    #displays that board
     child.display
-    #check for wins and shit here
     winner if child.horizontal_win?
     winner if child.vertical_win?
     winner if child.diagonal_lr_win?
